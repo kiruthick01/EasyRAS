@@ -4767,8 +4767,8 @@
       "data_type": "array of point",
       "valid_range_units": "X, Y, and Z (trigger elevation)",
       "tier": "situational",
-      "source": "UM-6.4.1 §6.19.2, p.205",
-      "notes": "This is a polygon-based ineffective area defined in RAS Mapper/GIS Tools, distinct from the per-XS ineffective area fields (geom.xs.opt.ineffective_* and geom.xs.ineffective_trigger_elevation). Module placement (Geometry Editor vs. RAS Mapper) is ambiguous — flagged for confirmation once the RAS Mapper module is catalogued."
+      "source": "UM-6.4.1 §6.19.2, p.205; confirmed against MAPPER-6.6 §7 (Ineffective Flow Areas), p.79",
+      "notes": "This is a polygon-based ineffective area defined in RAS Mapper/GIS Tools, distinct from the per-XS ineffective area fields (geom.xs.opt.ineffective_* and geom.xs.ineffective_trigger_elevation). RESOLVED during the RAS Mapper module pass (previously flagged as ambiguous between Geometry Editor and RAS Mapper): the RAS Mapper manual's own Chapter 7 'Geometry Data' groups Ineffective Flow Areas together with Rivers, Cross Sections, Bank Lines, Blocked Obstructions, Storage Areas, and 2D Flow Areas as one family of standard geometric data that happens to be authored through the RAS Mapper interface rather than the classic Geometric Data Editor - the same pattern already used elsewhere in this catalog for River Reach Centerline, XS Cut Line, and GIS Levee Line coordinates (all kept under Geometry Editor despite being RAS-Mapper-drawn). Geometry Editor module placement is therefore CONFIRMED CORRECT, not moved. Its 2D-drawn sibling, Blocked Obstructions, was added during this pass at geom.schematic.blocked_obstruction_2d.points under the same module-placement logic."
     },
     {
       "id": "sed.quasi_unsteady.bc.upstream_flow_series",
@@ -9197,6 +9197,174 @@
       "tier": "rare",
       "source": "MAPPER-6.6 §3 (Mesh Tolerances), p.24",
       "notes": "Global RAS Mapper Options-level mesh-generation validity check, alongside mapper.options.min_face_length_tolerance in the same Mesh Tolerances tab; verifies each 2D cell's computation point (cell center) is fully contained within its own cell during mesh generation."
+    },
+    {
+      "id": "geom.schematic.bank_line.points",
+      "module": "Geometry Editor",
+      "dialog_path": "RAS Mapper > Geometries > Bank Lines layer",
+      "field_name": "Bank Lines (polyline vertices, left/right channel bank)",
+      "control_type": "geospatial coordinate list (vector line feature)",
+      "data_type": "array of {X,Y} float pairs, per bank line feature",
+      "valid_range_units": "continuous or discontinuous; must not intersect the river line or itself; intersects each XS cut line at most once",
+      "tier": "common",
+      "source": "MAPPER-6.6 §7 (Bank Lines), p.73",
+      "notes": "GIS line layer intersected with each Cross Section cut line to auto-compute that cross section's Left/Right Bank Station (geom.xs.bank_stations.left / .right, already catalogued as numeric values). If no Bank Lines are drawn, bank stations default to the cross section endpoints. The underlying vector geometry itself was not previously catalogued during the Geometry Editor pass - added here as a gap found while cataloguing RAS Mapper's Geometry Data chapter, following the same precedent already used for River Reach Centerline and XS Cut Line GIS coordinates (both geospatial-line entries under Geometry Editor even though drawn via RAS Mapper)."
+    },
+    {
+      "id": "geom.schematic.flow_path_line.points",
+      "module": "Geometry Editor",
+      "dialog_path": "RAS Mapper > Geometries > Flow Path Lines layer",
+      "field_name": "Flow Path Lines (polyline vertices, left/right overbank)",
+      "control_type": "geospatial coordinate list (vector line feature)",
+      "data_type": "array of {X,Y} float pairs, per flow path line (typically one left-overbank, one right-overbank)",
+      "valid_range_units": "drawn in the downstream direction, following the center-of-mass of overbank flow; must not intersect river lines; intersects each cross section once",
+      "tier": "common",
+      "source": "MAPPER-6.6 §7 (Flow Path Lines), p.73",
+      "notes": "GIS line layer intersected with Cross Sections to compute the Left/Right Overbank Reach Length values (geom.xs.reach_lengths.lob / .rob, already catalogued as numeric values); the Main Channel reach length instead uses the River centerline. Same gap category as geom.schematic.bank_line.points."
+    },
+    {
+      "id": "geom.schematic.river_station_marker.points",
+      "module": "Geometry Editor",
+      "dialog_path": "RAS Mapper > Geometries > River Station Markers layer",
+      "field_name": "River Station Marker (point + assigned mileage/station)",
+      "control_type": "geospatial point + numeric input",
+      "data_type": "array of {X, Y, river_station}",
+      "valid_range_units": "river station value in project length units; stations for cross sections between two markers are linearly interpolated",
+      "tier": "situational",
+      "source": "MAPPER-6.6 §7 (River Station Markers), p.72",
+      "notes": "Overrides the default river-station computation (distance from the downstream-most point on the river line) so geometry can be tied to historic/known river stations. Not previously catalogued; distinct from the per-cross-section River Station identity value itself."
+    },
+    {
+      "id": "geom.schematic.blocked_obstruction_2d.points",
+      "module": "Geometry Editor",
+      "dialog_path": "RAS Mapper > Geometries > Blocked Obstructions layer",
+      "field_name": "GIS Blocked Obstruction Polygon (2D/RAS-Mapper-drawn)",
+      "control_type": "table (X,Y,Z point list) / drawn polygon",
+      "data_type": "array of point",
+      "valid_range_units": "X, Y, and Z (obstruction elevation); default elevation = highest terrain elevation at the polygon's intersection with cross sections",
+      "tier": "situational",
+      "source": "MAPPER-6.6 §7 (Blocked Obstructions), p.80",
+      "notes": "2D/GIS-drawn counterpart to the per-XS Blocked Obstruction fields (geom.xs.opt.obstructions_blocked), structurally identical in role to geom.schematic.ineffective_area_2d.points (its Ineffective Flow Area sibling - see meta.status for how that entry's module placement was resolved during this RAS Mapper pass). Added under the same module-placement logic: this is standard Geometry Data per the RAS Mapper manual's own chapter structure (Chapter 7, 'Geometry Data'), simply authored via the RAS Mapper interface rather than the classic Geometric Data Editor, so it belongs with the rest of the schematic geometry it parallels rather than under RAS Mapper."
+    },
+    {
+      "id": "2d.refinement_region.points",
+      "module": "2D Flow Areas",
+      "dialog_path": "RAS Mapper > Geometries > 2D Flow Areas > Refinement Regions layer",
+      "field_name": "Refinement Region Boundary (polygon vertices)",
+      "control_type": "geospatial coordinate list",
+      "data_type": "array of {X,Y} float pairs",
+      "valid_range_units": "closed polygon within a 2D Flow Area",
+      "tier": "situational",
+      "source": "MAPPER-6.6 §7 (Refinement Regions), p.88",
+      "notes": "Used to locally increase or decrease computation-point density within a 2D Flow Area mesh, independent of Breaklines (2d.breakline.*, already catalogued) though it shares the same insertion/enforcement mechanism. Not previously catalogued anywhere in this catalog - a genuine 2D-mesh-generation gap found while cataloguing RAS Mapper's Geometry Data chapter."
+    },
+    {
+      "id": "2d.refinement_region.name",
+      "module": "2D Flow Areas",
+      "dialog_path": "RAS Mapper > Refinement Region Editor",
+      "field_name": "Refinement Region Name",
+      "control_type": "text input",
+      "data_type": "string",
+      "valid_range_units": "must be unique",
+      "tier": "situational",
+      "source": "MAPPER-6.6 §7, p.88-89",
+      "notes": null
+    },
+    {
+      "id": "2d.refinement_region.cell_spacing",
+      "module": "2D Flow Areas",
+      "dialog_path": "RAS Mapper > Refinement Region Editor",
+      "field_name": "Refinement Region Cell Spacing (X, Y)",
+      "control_type": "numeric input x2",
+      "data_type": "float x2",
+      "valid_range_units": "spacing distance for computation points generated inside the refinement region's interior, same units as the 2D Flow Area's base DX/DY",
+      "tier": "situational",
+      "source": "MAPPER-6.6 §7, p.89",
+      "notes": null
+    },
+    {
+      "id": "2d.refinement_region.boundary_transition",
+      "module": "2D Flow Areas",
+      "dialog_path": "RAS Mapper > Refinement Region Editor",
+      "field_name": "Refinement Region Boundary Transition (Perimeter/Near Spacing, Far Spacing, Near Repeats)",
+      "control_type": "numeric inputs",
+      "data_type": "{near_spacing: float, far_spacing: float, near_repeats: int}",
+      "valid_range_units": "Near/Perimeter Spacing: point spacing along the region boundary (default = the region's Cell Spacing X value); Far Spacing: how large the max cell can grow away from the boundary (default = the 2D Flow Area's own point spacing); Near Repeats: number of times the Perimeter Spacing is duplicated on both sides of the boundary before transitioning to Far Spacing (default 0)",
+      "tier": "rare",
+      "source": "MAPPER-6.6 §7 (Refinement Regions property table), p.89",
+      "notes": "The manual's own property table explicitly marks Far Spacing as '[NOT IMPLEMENTED YET]' as of v6.6 - flagged rather than silently treated as fully functional; confirm against live HEC-RAS 7.0 whether this has since been implemented. The source table's text extraction shows some row/description misalignment from the PDF's two-column layout (property names and descriptions appear slightly offset); the interpretation here is the most internally-consistent reading against the parallel Breakline property table (MAPPER-6.6 p.87) but should be spot-checked against the live Refinement Region Editor dialog."
+    },
+    {
+      "id": "2d.refinement_region.protection_radius",
+      "module": "2D Flow Areas",
+      "dialog_path": "RAS Mapper > Refinement Region Editor",
+      "field_name": "Enforce 1 Cell Protection Radius",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "valid_range_units": "buffers the region boundary by the Perimeter Spacing distance on each side; computation points within this buffer can neither be added nor removed by mesh-generation routines",
+      "tier": "rare",
+      "source": "MAPPER-6.6 §7, p.89",
+      "notes": null
+    },
+    {
+      "id": "mapper.porosity_flow_drag.layer_association",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Map Layers | Create New RAS Layer | Porosity and Flow Drag Layer",
+      "field_name": "Porosity and Flow Drag Classification Layer (raster/vector input association)",
+      "control_type": "file chooser (raster or vector) + classification editor",
+      "data_type": "{input_files, classification_names}",
+      "valid_range_units": null,
+      "tier": "rare",
+      "source": "MAPPER-6.6 §7 (Porosity and Flow Drag), p.102-103",
+      "notes": "Defines surface classifications (e.g. dense vegetation, buildings) whose porosity and flow-drag parameters are interpolated onto 2D computational mesh cells and faces - a genuinely new 2D hydraulic input not previously catalogued anywhere in this catalog (keyword searches for 'porosity' and 'flow drag' against the prior 764 entries returned no match before this pass)."
+    },
+    {
+      "id": "mapper.porosity_flow_drag.classification_parameters",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > right-click Porosity and Flow Drag layer > Edit Land Cover Data Table",
+      "field_name": "Porosity and Flow Drag Parameters per Classification",
+      "control_type": "table (per-classification numeric inputs)",
+      "data_type": "array of {classification_name, porosity_and_drag_parameters}",
+      "valid_range_units": "UNCONFIRMED - the manual states only 'Provide parameters that describe the flow obstructions' and refers to an in-app 'Learn more about each parameter here' help link, without giving specific parameter names/ranges in extractable text",
+      "tier": "rare",
+      "source": "MAPPER-6.6 §7, p.102-103 (parameter existence only; field-level names/ranges not given in this manual's extractable text)",
+      "notes": "FLAGGED per Phase 0 rule 4 rather than guessed. This catalog's other manuals (2DUM-6.6, HRM-6.0) were not cross-checked for a fuller Porosity/Flow Drag parameter description within this pass's time budget - a future pass should search 2DUM-6.6 directly for this specific feature and/or confirm the exact parameter set against the live HEC-RAS 7.0 dialog before Phase 1 implementation. Do not assume a specific parameter list (e.g. a drag coefficient name/units) without that confirmation."
+    },
+    {
+      "id": "mapper.reference.points",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Geometries > Reference Points layer",
+      "field_name": "Reference Point (location + name)",
+      "control_type": "geospatial point feature + name",
+      "data_type": "{X, Y, name}",
+      "valid_range_units": "value computed from the nearest cell computation point; supported only within a single 2D Flow Area or 1D area (cannot span multiple areas)",
+      "tier": "situational",
+      "source": "MAPPER-6.6 §7 (Reference Locations - Reference Points), p.104-105",
+      "notes": "Persisted point geometry used by the Unsteady Flow Data Editor's Observed Data tab (Observed Stage and High Water Mark Data, referenced by feature name) and read during simulation to write results to the output HDF - must be created before simulation runs, so this is genuine model input rather than a post-hoc results-viewer artifact. Not previously catalogued (keyword search for 'reference_point'/'reference_line'/'reference_area' returned no matches before this pass)."
+    },
+    {
+      "id": "mapper.reference.lines",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Geometries > Reference Lines layer",
+      "field_name": "Reference Line (location + name)",
+      "control_type": "geospatial polyline feature + name",
+      "data_type": "{points: array of {X,Y}, name}",
+      "valid_range_units": "supported only within a single 2D Flow Area or 1D area; best placed perpendicular to flow where the water surface is roughly one-dimensional",
+      "tier": "situational",
+      "source": "MAPPER-6.6 §7 (Reference Lines), p.105-108",
+      "notes": "Used by the Unsteady Flow Data Editor's Observed Data tab (Observed Stage, Observed Flow, Rating Curve, High Water Mark Data) and by floodway encroachment analysis for comparing results; computes flow-weighted stage/flow/velocity time series during simulation. Same 'must exist before simulation' status as Reference Points."
+    },
+    {
+      "id": "mapper.reference.areas",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Geometries > Reference Areas layer",
+      "field_name": "Reference Area (location + name)",
+      "control_type": "geospatial polygon feature + name",
+      "data_type": "{points: array of {X,Y}, name}",
+      "valid_range_units": "supported only within a single 2D Flow Area or 1D area; used to evaluate Flow In, Flow Out, and Volume for the enclosed area",
+      "tier": "situational",
+      "source": "MAPPER-6.6 §7 (Reference Areas), p.109-110",
+      "notes": null
     }
   ]
 }
