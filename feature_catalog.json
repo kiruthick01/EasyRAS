@@ -45,6 +45,13 @@
         "version": "6.4.1",
         "local_path": "docs/manuals/HEC-RAS_Water_Quality_Users_Manual-v6.4.1.pdf",
         "obtained_via": "Wayback Machine save-on-demand capture of official hec.usace.army.mil PDF, triggered 2026-08-31 (direct fetch blocked by local network content filter; capture not yet indexed by archive.org's availability API at fetch time, so no snapshot timestamp available to cite)"
+      },
+      {
+        "id": "MAPPER-6.6",
+        "title": "HEC-RAS Mapper User's Manual",
+        "version": "6.6",
+        "local_path": "docs/manuals/HEC-RAS_Mapper_Users_Manual_v6.6.pdf",
+        "obtained_via": "Wayback Machine capture of official hec.usace.army.mil PDF (direct fetch blocked by local network content filter), captured 2026-02-07"
       }
     ],
     "version_gap_warning": "Manuals sourced (v6.4.1 / 6.0 / 6.6) are the newest full manuals findable; installed software is 7.0. Any field that appears in the live 7.0 UI but not in these manuals is NOT yet in this catalog and must be flagged/added after live-software confirmation (user has HEC-RAS 7.0 installed and can supply screenshots) rather than guessed.",
@@ -8926,6 +8933,90 @@
       "tier": "situational",
       "source": "UM-6.4.1 §8.7.8, p.273 (\"currently, encroachments are limited to method 1 within the unsteady flow analysis module\"); §10.3.2, p.431 (\"Method 1 through 5 (column)... Data needs specified for the encroachment analysis method\")",
       "notes": "1D-only (the 2D portion of a model can only use plan.encroachment_unsteady.encroachment_regions). The manual contains an apparent internal inconsistency between §8.7.8, which states unsteady encroachments are currently limited to Method 1, and §10.3.2's later table description, which lists a Method 1-5 column with per-row method selection like the steady dialog. Flagged for live HEC-RAS 7.0 confirmation of which methods are actually selectable in the unsteady editor rather than guessed."
+    },
+    {
+      "id": "mapper.terrain.input_files",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Project | Create New RAS Terrain > New Terrain Layer dialog",
+      "field_name": "Input Terrain Files (list + priority order)",
+      "control_type": "file list (Add Files) with Move Up/Down priority ordering",
+      "data_type": "array of {file_path, priority_rank}",
+      "valid_range_units": "any GDAL-supported raster format (.flt, .adf, .tif, etc.); file at top of list = highest priority when evaluating the composite Terrain Layer",
+      "tier": "common",
+      "source": "MAPPER-6.6 §5 (RAS Terrain Development), p.33-34",
+      "notes": "Defines which raster dataset(s) are composited into the project's RAS Terrain (stored as GeoTiff, 'Terrain Name.Filename.tif'); priority order determines which source wins where rasters overlap. This underlies every terrain-dependent computation (XS/2D mesh elevation extraction) and is the field a HEC-RASController bridge needs to read/write to reproduce a project's terrain construction."
+    },
+    {
+      "id": "mapper.terrain.rounding_precision",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > New Terrain Layer dialog",
+      "field_name": "Rounding (precision)",
+      "control_type": "numeric input / dropdown",
+      "data_type": "float",
+      "valid_range_units": "fraction of a map unit; default 1/32 (values within +/-0.015625 of raw data)",
+      "tier": "rare",
+      "source": "MAPPER-6.6 §5, p.34",
+      "notes": "Controls the precision with which imported terrain raster values are stored in the final GeoTiff; affects the actual elevation values used downstream for XS/2D-mesh extraction, not merely a display setting."
+    },
+    {
+      "id": "mapper.terrain.vertical_conversion",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > New Terrain Layer dialog",
+      "field_name": "Vertical Conversion",
+      "control_type": "dropdown",
+      "data_type": "enum",
+      "valid_range_units": "Automatic (default) | Feet to Meters | Meters to Feet | Custom Value | No Conversion",
+      "tier": "situational",
+      "source": "MAPPER-6.6 §5, p.34",
+      "notes": "Applied at terrain import time; changes the actual elevation values stored in the RAS Terrain and therefore the computed geometry - not a display unit toggle."
+    },
+    {
+      "id": "mapper.terrain.create_stitches",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > New Terrain Layer dialog",
+      "field_name": "Create Stitches",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "valid_range_units": null,
+      "tier": "situational",
+      "source": "MAPPER-6.6 §5, p.34",
+      "notes": "Automatically triangulates a continuous surface between imported terrain tiles, filling holes used for elevation extraction along cross sections and 2D cell faces; affects the composite terrain surface used in computation, not just its display."
+    },
+    {
+      "id": "mapper.terrain.merge_inputs_single_raster",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > New Terrain Layer dialog",
+      "field_name": "Merge Inputs to Single Raster",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "valid_range_units": "intended for many same-resolution, edge-matched LiDAR tiles",
+      "tier": "rare",
+      "source": "MAPPER-6.6 §5, p.34",
+      "notes": null
+    },
+    {
+      "id": "mapper.terrain.filename",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > New Terrain Layer dialog",
+      "field_name": "Terrain Layer Filename / Name",
+      "control_type": "text input",
+      "data_type": "string",
+      "valid_range_units": "default 'Terrain'; produces Terrain.hdf (the RAS Terrain layer file loaded by RAS Mapper) and Terrain.vrt",
+      "tier": "common",
+      "source": "MAPPER-6.6 §5, p.34-35",
+      "notes": "The .hdf file is the persisted RAS Terrain layer referenced by the project; this is the file association a bridge needs to know about for any terrain-dependent operation."
+    },
+    {
+      "id": "mapper.terrain.association",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Project | Manage Layer Associations > Manage Terrain Associations",
+      "field_name": "Terrain Layer <-> Geometry/Plan Association",
+      "control_type": "association table",
+      "data_type": "map of {geometry_or_result: terrain_layer}",
+      "valid_range_units": "a RAS Terrain must be associated with a Geometry before it can be used to extract elevation data (XS/2D mesh) and with a Results Plan before flood-depth/inundation mapping",
+      "tier": "common",
+      "source": "MAPPER-6.6 §5 (Terrain Association), p.38 and §9 (Associated Terrain), p.135",
+      "notes": "Critical link: without this association HEC-RAS cannot extract elevation data for geometry or compute inundation/depth mapping for a plan. This is persisted per-geometry/per-plan project data, distinct from which raster files make up a Terrain layer itself (mapper.terrain.input_files)."
     }
   ]
 }
