@@ -2765,11 +2765,11 @@
       "dialog_path": "RAS Mapper (Land Classification layer) referenced from 2D Flow Area Editor",
       "field_name": "Land-Use Classification vs Manning's n (spatial override table)",
       "control_type": "table (built in RAS Mapper)",
-      "data_type": "n/a (see RAS Mapper module, not yet catalogued)",
+      "data_type": "array of {classification_name, manning_n} (see mapper.landcover.classification_mannings_n for the full field detail)",
       "valid_range_units": null,
       "tier": "situational",
-      "source": "UM-6.4.1 §6.9.3, p.132",
-      "notes": "PLACEHOLDER - overrides the Default Manning's n Value wherever its polygons cover the 2D Flow Area; full field detail belongs to the RAS Mapper module."
+      "source": "UM-6.4.1 §6.9.3, p.132; full mechanism now sourced to MAPPER-6.6 §6 p.53 and §7 p.97-98",
+      "notes": "No longer a placeholder: the RAS Mapper module pass added mapper.landcover.classification_mannings_n (the actual per-Land-Cover-classification n-value table, edited via RAS Mapper > Edit Land Cover Data) plus the supporting mapper.landcover.input_files (which raster/shapefile builds the Land Cover layer), mapper.manningsn.calibration_region_value, and mapper.manningsn.base_override (the two override mechanisms layered on top of the base classification table). This entry is kept as the 2D Flow Areas-side pointer (this is where the 2D Flow Area Editor references the Land Cover layer to pull spatial n values into the mesh) rather than merged into the RAS Mapper entries, since the two describe the same data from two different modules' vantage points, consistent with how geom.schematic.mannings_n_calibration_region.points (Geometry Editor) and the RAS Mapper Manning's n entries coexist."
     },
     {
       "id": "2d.mesh.cell_volume_filter_tol",
@@ -6747,8 +6747,8 @@
       "data_type": "float (percent)",
       "valid_range_units": "percentage of the distance between neighboring computational points; default 5% (v6.1 and earlier); 15-25% recommended for 2D sediment simulations",
       "tier": "situational",
-      "source": "2DSED-6.4.1 §2.2.5, p.26-27",
-      "notes": "Global RAS Mapper Options-level default (not per-2D-Flow-Area) controlling how small a computational-mesh cell face the generator will tolerate before it produces degenerate small faces; raising it merges/avoids those small faces. Only documented explicitly in the 2D Sediment manual's 'Hydraulic Best Practices' chapter among the manuals on hand — not described in UM-6.4.1 or 2DUM-6.6's own text, so this is the sole source until the RAS Mapper module gets a dedicated pass. Originally misidentified as a 2D Flow Areas gap while cataloguing Sediment Transport; it is a RAS Mapper Options-editor field, distinct from the Geometry Editor's 2D Flow Area mesh-generation tolerances (2d.mesh.cell_volume_filter_tol, face_profile_filter_tol, etc.). RAS Mapper module is not otherwise catalogued yet — this is an isolated early entry pending that module's full dedicated pass."
+      "source": "MAPPER-6.6 §3 (Mesh Tolerances), p.24; also 2DSED-6.4.1 §2.2.5, p.26-27",
+      "notes": "Global RAS Mapper Options-level default (not per-2D-Flow-Area) controlling how small a computational-mesh cell face the generator will tolerate before it produces degenerate small faces; raising it merges/avoids those small faces. Originally sourced only to the 2D Sediment manual's 'Hydraulic Best Practices' chapter while cataloguing Sediment Transport (UM-6.4.1 and 2DUM-6.6 don't describe it in their own text); now confirmed and re-sourced against the dedicated RAS Mapper manual during the RAS Mapper module pass - MAPPER-6.6 p.24 gives the same definition ('used to evaluate the length of each cell face. If the cell face becomes very small... it is removed with the two adjacent cell faces replacing the length') but no numeric default/recommended-range, so the 2DSED-6.4.1 percentage figures are kept as a secondary source for those specifics. It is a RAS Mapper Options-editor field, distinct from the Geometry Editor's 2D Flow Area mesh-generation tolerances (2d.mesh.cell_volume_filter_tol, face_profile_filter_tol, etc.). See also the sibling field in the same Mesh Tolerances tab, mapper.options.verify_computation_point_in_cell, added during this pass. RAS Mapper module is now fully catalogued (see meta.status) - this is no longer an isolated early entry."
     },
     {
       "id": "wq.cell.min_length",
@@ -9017,6 +9017,186 @@
       "tier": "common",
       "source": "MAPPER-6.6 §5 (Terrain Association), p.38 and §9 (Associated Terrain), p.135",
       "notes": "Critical link: without this association HEC-RAS cannot extract elevation data for geometry or compute inundation/depth mapping for a plan. This is persisted per-geometry/per-plan project data, distinct from which raster files make up a Terrain layer itself (mapper.terrain.input_files)."
+    },
+    {
+      "id": "mapper.landcover.input_files",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Map Layers | Create New RAS Layer | Land Cover Layer > New Land Cover Layer dialog",
+      "field_name": "Land Cover Input Files (list + priority, Import Extents, Naming Standard / Name Field)",
+      "control_type": "file list with priority ordering + dropdowns",
+      "data_type": "array of {file_path, priority_rank, naming_standard_or_name_field}",
+      "valid_range_units": "raster (NLCD2016 / Anderson Level II / NOAA C-CAP naming standards) or polygon shapefile (user-selected unique Name Field); Import Extents = Terrains (default) | Geometries | Terrains and Geometries | Current View | Entire Input File(s)",
+      "tier": "common",
+      "source": "MAPPER-6.6 §6 (Land Cover Layer - Creating the Land Cover Layer), p.50-52",
+      "notes": "Defines the source raster/shapefile dataset(s) composited into the project's Land Cover layer (output 'LandCover.tif'/'LandCover.hdf'), the surrogate used to spatially assign Manning's n and Percent Impervious values. This is the file-association field the pre-existing placeholder entry 2d.mesh.landuse_mannings_table (2D Flow Areas module) referenced generically before this pass; see that entry's updated notes."
+    },
+    {
+      "id": "mapper.landcover.output_association",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > New Land Cover Layer dialog > Output File",
+      "field_name": "Land Cover Output Cell Size / Filename",
+      "control_type": "numeric input + text input",
+      "data_type": "{cell_size: float, filename: string}",
+      "valid_range_units": "default Cell Size 100 (map units); default Filename 'LandCover'",
+      "tier": "common",
+      "source": "MAPPER-6.6 §6, p.51-52",
+      "notes": null
+    },
+    {
+      "id": "mapper.landcover.classification_mannings_n",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > right-click Land Cover layer > Edit Land Cover Data",
+      "field_name": "Manning's n Value per Land Cover Classification",
+      "control_type": "table (per-classification numeric input)",
+      "data_type": "array of {classification_name, manning_n}",
+      "valid_range_units": "float; 0 is reserved for NoData; if a NoData value is specified, the 2D Flow Area's Default n Value is NOT used as a fallback",
+      "tier": "common",
+      "source": "MAPPER-6.6 §6 (Parameterizing Land Cover Data), p.53 and §7 (Manning's n Values), p.97-98",
+      "notes": "The actual per-classification n-value table that spatially overrides Manning's n across cross sections and 2D Flow Area meshes wherever the Land Cover layer's classification polygons/cells apply. Resolves the placeholder detail in 2d.mesh.landuse_mannings_table (2D Flow Areas module), which should now be read together with this entry."
+    },
+    {
+      "id": "mapper.landcover.classification_percent_impervious",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > right-click Land Cover layer > Edit Land Cover Data",
+      "field_name": "Percent Impervious per Land Cover Classification",
+      "control_type": "table (per-classification numeric input)",
+      "data_type": "array of {classification_name, percent_impervious}",
+      "valid_range_units": "0-100%",
+      "tier": "situational",
+      "source": "MAPPER-6.6 §6, p.53 and §7 (Percent Impervious), p.100-101",
+      "notes": "Spatially distributes percent-impervious area across 2D Flow Area meshes (relevant to urban drainage / 2D infiltration studies); extracted from the same Land Cover layer/editor as the Manning's n classification table."
+    },
+    {
+      "id": "mapper.manningsn.calibration_region_value",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Geometries > Manning's n Values > Calibration Regions layer",
+      "field_name": "Manning's n Calibration Region Override Value",
+      "control_type": "numeric input (per polygon, in a table)",
+      "data_type": "float",
+      "valid_range_units": "entered value takes precedence over the Land Cover dataset's classification value wherever the region polygon applies",
+      "tier": "situational",
+      "source": "MAPPER-6.6 §7 (Manning's n Values), p.97-98",
+      "notes": "The discrete n-value entered for each Calibration Region polygon (geom.schematic.mannings_n_calibration_region.points, Geometry Editor module, catalogues the polygon geometry only). Priority at a given point: Calibration Region value > Base Override value > Land Cover classification value."
+    },
+    {
+      "id": "mapper.manningsn.base_override",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Manning's n Values Table > Base Override column",
+      "field_name": "Manning's n Base Override",
+      "control_type": "numeric input (per land cover classification)",
+      "data_type": "float",
+      "valid_range_units": "globally replaces all instances of a given classification's n-value from the base Land Cover dataset; lower priority than Calibration Regions",
+      "tier": "rare",
+      "source": "MAPPER-6.6 §7, p.98",
+      "notes": null
+    },
+    {
+      "id": "mapper.percent_impervious.calibration_region_value",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Geometries > Percent Impervious > Calibration Regions layer",
+      "field_name": "Percent Impervious Calibration Region Override Value (and Base Override)",
+      "control_type": "numeric input (per polygon, in a table)",
+      "data_type": "float",
+      "valid_range_units": "0-100%; entered value takes precedence over the Land Cover dataset's classification value wherever the region polygon applies",
+      "tier": "rare",
+      "source": "MAPPER-6.6 §7 (Percent Impervious), p.100-101",
+      "notes": "Same Calibration Region / Base Override precedence pattern as Manning's n (mapper.manningsn.calibration_region_value / mapper.manningsn.base_override); the manual describes both mechanisms in the same paragraph for Percent Impervious ('Base Override values may also be specified to globally replace values, while the Calibration Region only affects the area within the Region') without a separate dedicated subsection, so both are documented in this one entry rather than split further."
+    },
+    {
+      "id": "mapper.soils.layer_association",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Map Layers | Create New RAS Layer | Soils Layer",
+      "field_name": "Soils Layer (input files/gSSURGO import + classification field + output association)",
+      "control_type": "file/geodatabase chooser + dropdown + numeric/text inputs",
+      "data_type": "{input_source, classification_field, cell_size, filename}",
+      "valid_range_units": "SSURGO shapefile or gSSURGO file geodatabase; classification field one of Hydrologic Group | Texture Group | Map Unit Key | Map Unit Symbol | Merged Hydr:Texture (gSSURGO) or a user-selected shapefile field",
+      "tier": "rare",
+      "source": "MAPPER-6.6 §6 (Soils Layer / Importing gSSURGO Data), p.54-55",
+      "notes": "The Soils layer is an intermediate classification layer; it is not used directly by the hydraulic solver except as one of two optional inputs (with Land Cover) used to build an Infiltration Layer (mapper.infiltration.*). Included because the layer file itself (Soils.hdf/Soils.tif) is a persisted project asset a full round-trip bridge would need to preserve when referenced."
+    },
+    {
+      "id": "mapper.infiltration.method",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Map Layers | Create New RAS Layer | Infiltration Layer (from Land Cover/Soils or from Shapefile)",
+      "field_name": "Infiltration Method",
+      "control_type": "dropdown",
+      "data_type": "enum",
+      "valid_range_units": "Deficit Constant | SCS Curve Number | Green and Ampt",
+      "tier": "situational",
+      "source": "MAPPER-6.6 §6 (Infiltration Layer), p.56-58",
+      "notes": "Selects which infiltration/loss model 2D unsteady rainfall-on-mesh simulations use. Confirmed present in this v6.6 manual - NOT a version-gap-only feature relative to the installed HEC-RAS 7.0 (see meta.status for the version-gap note this resolves). See mapper.infiltration.classification_parameters for what remains unconfirmed about this feature (the per-method parameter field names)."
+    },
+    {
+      "id": "mapper.infiltration.layer_source",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Create New Infiltration Layer dialog",
+      "field_name": "Infiltration Layer Source (Land Cover x Soils intersection, or single Classification Shapefile)",
+      "control_type": "dropdown + layer selection",
+      "data_type": "enum + {land_cover_layer, soils_layer, shapefile, classification_field}",
+      "valid_range_units": "Method 1: intersection of a Land Cover layer and/or a Soils layer (either or both, cross-referenced into one classification table); Method 2: a single classification shapefile with a user-chosen unique field (e.g. 'Hydrologic Soils Group')",
+      "tier": "situational",
+      "source": "MAPPER-6.6 §6, p.56-57",
+      "notes": null
+    },
+    {
+      "id": "mapper.infiltration.classification_parameters",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > right-click Infiltration layer > Edit Infiltration Data",
+      "field_name": "Infiltration Parameters per Classification",
+      "control_type": "table (per-classification numeric inputs, columns vary by Infiltration Method)",
+      "data_type": "array of {classification_name, method_specific_parameters}",
+      "valid_range_units": "UNCONFIRMED - the manual states a parameter table is provided 'based on the Infiltration Method... selected' but the exact per-method column names/ranges are shown only in an embedded screenshot figure that this pass's text extraction could not recover (no PDF page-image renderer was available in this environment)",
+      "tier": "situational",
+      "source": "MAPPER-6.6 §6, p.58 (table's existence and method-dependence only; field-level detail not extractable from this copy)",
+      "notes": "FLAGGED per Phase 0 rule 4 rather than guessed. The manual confirms this per-classification parameter table exists and that its columns depend on the selected Infiltration Method (Deficit Constant / SCS Curve Number / Green and Ampt), but this pass could not read the actual column names/ranges. Do not assume specific parameter names (e.g. 'Curve Number', 'Wetting Front Suction Head') without confirming them against the live HEC-RAS 7.0 Edit Infiltration Data dialog before Phase 1 implementation - see meta.status."
+    },
+    {
+      "id": "mapper.infiltration.calibration_region_value",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Geometries > Infiltration > Calibration Regions layer",
+      "field_name": "Infiltration Calibration Region Override Parameters",
+      "control_type": "table (per polygon)",
+      "data_type": "array of {region_name, method_specific_parameters}",
+      "valid_range_units": "entered values take precedence over the Infiltration layer's classification values wherever the region polygon applies",
+      "tier": "rare",
+      "source": "MAPPER-6.6 §7 (Infiltration Parameters), p.101-102",
+      "notes": "Same precedence pattern as the Manning's n / Percent Impervious Calibration Regions. Column-level detail shares the same unconfirmed-field-name caveat as mapper.infiltration.classification_parameters."
+    },
+    {
+      "id": "mapper.infiltration.base_override",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Infiltration Parameters Table > Base Override column",
+      "field_name": "Infiltration Base Override",
+      "control_type": "numeric input (per classification)",
+      "data_type": "method_specific_parameters",
+      "valid_range_units": "globally replaces all instances of a classification's infiltration parameters from the base Infiltration dataset; lower priority than Calibration Regions",
+      "tier": "rare",
+      "source": "MAPPER-6.6 §7, p.102",
+      "notes": null
+    },
+    {
+      "id": "mapper.landclass.geometry_association",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Project | Manage Layer Associations",
+      "field_name": "Land Classification Layer <-> Geometry Association",
+      "control_type": "association table",
+      "data_type": "map of {geometry: {land_cover, soils, infiltration}}",
+      "valid_range_units": "at minimum the Land Cover layer is typically associated for Manning's n; Soils/Infiltration associated as needed by project type",
+      "tier": "common",
+      "source": "MAPPER-6.6 §6 (Associating the Land Classification Layer with a Geometry), p.59",
+      "notes": "Parallel field to mapper.terrain.association - without this association the classification layers are not used by the geometry/computation."
+    },
+    {
+      "id": "mapper.options.verify_computation_point_in_cell",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Tools/Options > Project Settings > Mesh Tolerances tab",
+      "field_name": "Verify Computation Point is within the Cell Boundary",
+      "control_type": "checkbox",
+      "data_type": "boolean",
+      "valid_range_units": null,
+      "tier": "rare",
+      "source": "MAPPER-6.6 §3 (Mesh Tolerances), p.24",
+      "notes": "Global RAS Mapper Options-level mesh-generation validity check, alongside mapper.options.min_face_length_tolerance in the same Mesh Tolerances tab; verifies each 2D cell's computation point (cell center) is fully contained within its own cell during mesh generation."
     }
   ]
 }
