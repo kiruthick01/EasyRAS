@@ -9365,6 +9365,126 @@
       "tier": "situational",
       "source": "MAPPER-6.6 §7 (Reference Areas), p.109-110",
       "notes": null
+    },
+    {
+      "id": "mapper.terrain_mod.modification_layer",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > right-click RAS Terrain > Add New Modification Layer",
+      "field_name": "Terrain Modification Layer (type + name)",
+      "control_type": "menu selection + text input",
+      "data_type": "{modification_group: enum(Shapes|Lines|Polygons), name}",
+      "valid_range_units": null,
+      "tier": "situational",
+      "source": "MAPPER-6.6 §8 (Terrain Modification Tools / Add New Modification Layer), p.117-119",
+      "notes": "Terrain Modifications are stored as vector additions inside the RAS Terrain's own .hdf file (not a separate geometry file); this is the persisted mechanism used to condition bathymetry, add levees/high ground, or represent piers/obstructions not resolved in the base terrain raster - directly affects the composite terrain used for every downstream computation, matching the task guidance to catalogue bathymetry/channel-modification layers."
+    },
+    {
+      "id": "mapper.terrain_mod.modification_method",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Terrain Modification feature editor",
+      "field_name": "Modification Method",
+      "control_type": "dropdown",
+      "data_type": "enum",
+      "valid_range_units": "Replace Terrain Value (default) | Higher (Terrain/User) Value | Lower (Terrain/User) Value | Add Value to Terrain",
+      "tier": "situational",
+      "source": "MAPPER-6.6 §8, p.119-120",
+      "notes": "Shared enum used by all three modification group types (Shapes, Lines, Polygons); determines how the modification's elevation(s) combine with the underlying base terrain."
+    },
+    {
+      "id": "mapper.terrain_mod.shape_modification",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Terrain Modification > Shapes group > shape editor (Circle/Ellipse, Rectangle, Triangle, Elongated Pier)",
+      "field_name": "Simple Shape Modification (type, elevation, dimensions, rotation)",
+      "control_type": "form (varies by shape type)",
+      "data_type": "{shape_type: enum, name, modification_method, elevation: float, dimensions: object, rotation_angle: float}",
+      "valid_range_units": "shape_type: Circle/Ellipse | Square/Rectangle | Triangle | Elongated Pier (composite shape with rounded or triangular nose); a single constant elevation override applies to the whole shape",
+      "tier": "situational",
+      "source": "MAPPER-6.6 §8 (Simple Shape Modification), p.120-121",
+      "notes": "Typically used for small, constant-elevation obstructions such as bridge piers."
+    },
+    {
+      "id": "mapper.terrain_mod.line_modification",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Terrain Modification > Lines group > Ground Line Editor",
+      "field_name": "Line Modification (centerline, cross section template, station-elevation profile, System Name)",
+      "control_type": "polyline + form + table",
+      "data_type": "{centerline: array of {X,Y}, top_width: float, left_side_slope: float, right_side_slope: float, max_extent_width: float, station_elevation: array of {station,elevation}, system_name: string, line_type: enum(High Ground|Channel)}",
+      "valid_range_units": "trapezoidal cross-section template applied along the line; System Name used for National Levee Database (NLD) connectivity/continuity between segments; line_type defaults the Modification Method to Higher Value (High Ground) or Lower Value (Channel)",
+      "tier": "situational",
+      "source": "MAPPER-6.6 §8 (Line Modifications), p.121-125, and National Levee Database Data, p.126-130",
+      "notes": "The primary mechanism for conditioning channel bathymetry (trenching a channel into the terrain) or adding linear high ground (levees, roads) not adequately resolved by the base terrain raster; commonly populated from imported NLD alignment data, but the NLD download tool itself is a one-time import action (excluded per this catalog's existing DSS-import precedent) - only the resulting persisted line-modification fields are catalogued here. Also carries a Transition Percent attribute controlling interpolation between connected segments sharing the same System Name."
+    },
+    {
+      "id": "mapper.terrain_mod.polygon_modification",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Terrain Modification > Polygons group > polygon editor",
+      "field_name": "Polygon Modification (boundary, Perimeter Profile Mode, elevation control points)",
+      "control_type": "polygon + form",
+      "data_type": "{boundary: array of {X,Y}, name, perimeter_profile_mode: enum, modification_method, snap_tolerance: float}",
+      "valid_range_units": "shape: Rectangle | Multipoint; Perimeter Profile Mode: Terrain Elevations or Override with Control Points (default) | Use Imported Z values (from a PolygonZ shapefile) | Use Constant Elevation",
+      "tier": "situational",
+      "source": "MAPPER-6.6 §8 (Polygon Modification), p.125-126",
+      "notes": null
+    },
+    {
+      "id": "mapper.terrain_mod.elevation_control_points",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Terrain Modification > Line or Polygon modification's Elevation Control Points sub-layer",
+      "field_name": "Elevation Control Points",
+      "control_type": "geospatial point + numeric input",
+      "data_type": "array of {X, Y, elevation_override}",
+      "valid_range_units": "must fall within the Control Point Snapping Distance of the parent line/polygon to be used; elevations are triangulated to interpolate the modification surface",
+      "tier": "rare",
+      "source": "MAPPER-6.6 §8, p.124, 126",
+      "notes": "Shared sub-layer mechanism used by both Line and Polygon terrain modifications."
+    },
+    {
+      "id": "mapper.terrain_mod.clone_terrain",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > right-click RAS Terrain > Clone Terrain (Virtual)",
+      "field_name": "Terrain Clone (virtual copy reference)",
+      "control_type": "menu action + name",
+      "data_type": "{clone_name, base_terrain_reference}",
+      "valid_range_units": null,
+      "tier": "rare",
+      "source": "MAPPER-6.6 §8 (Clone Terrain), p.118",
+      "notes": "Creates a new .hdf file that references the base Terrain's .tif/.hdf and stores its own independent set of vector Terrain Modifications, without duplicating the base raster data. A Geometry or Plan can be associated with a Terrain Clone rather than the base Terrain (mapper.terrain.association), so this reference is genuine persisted project data - not just a workflow convenience - that a round-trip bridge would need to preserve."
+    },
+    {
+      "id": "mapper.settings.elevation_point_filtering",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Tools/Options > Project Settings > General tab",
+      "field_name": "Elevation Point Filtering",
+      "control_type": "numeric input",
+      "data_type": "int",
+      "valid_range_units": "maximum number of points to reduce Cross Section (XS) and Lateral Structure (LS) points to; hard system limit of 500 points per cross section",
+      "tier": "situational",
+      "source": "MAPPER-6.6 §3 (General), p.23",
+      "notes": "Directly affects the number of points actually retained on cross sections and lateral structures extracted from terrain - not a display setting; changes the geometry data written to the model."
+    },
+    {
+      "id": "mapper.settings.computation_decimal_places",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Tools/Options > Project Settings > General tab",
+      "field_name": "Computation Decimal Places (Horizontal / Vertical)",
+      "control_type": "numeric input x2",
+      "data_type": "int x2",
+      "valid_range_units": "number of decimal places used when extracting information (elevations, coordinates) from the Terrain",
+      "tier": "rare",
+      "source": "MAPPER-6.6 §3 (General), p.23",
+      "notes": "Controls the precision of terrain-extracted values written into geometry data (XS station-elevation points, 2D mesh face profiles, etc.)."
+    },
+    {
+      "id": "mapper.settings.xs_river_stations_decimal_places",
+      "module": "RAS Mapper",
+      "dialog_path": "RAS Mapper > Tools/Options > Project Settings > General tab",
+      "field_name": "XS River Stations - Decimal Places",
+      "control_type": "numeric input (shared with Computation Decimal Places / Units)",
+      "data_type": "int",
+      "valid_range_units": "river stationing for 1D objects (cross sections, inline structures, lateral structures) is auto-computed to this many decimal places; RAS Mapper auto-increments precision if two stations would otherwise collide",
+      "tier": "rare",
+      "source": "MAPPER-6.6 §3 (General), p.23",
+      "notes": null
     }
   ]
 }
